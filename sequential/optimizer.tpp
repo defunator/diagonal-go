@@ -31,7 +31,6 @@ double NSequential::Optimizer<N>::optimize(
     }
     bigDiff2 *= eps * eps;
     while (plane.GetBestFragmentDiff2() > bigDiff2) {
-        // std::cout << "HERE1" << std::endl;
         std::size_t bestFragmentId = plane.GetBestFragmentId();
         std::cout << "f(X*) = " << plane.GetBestPoint(optimum) << std::endl;
         for (auto el : optimum) {
@@ -39,7 +38,6 @@ double NSequential::Optimizer<N>::optimize(
         }
         std::cout << std::endl;
         plane.DivideFragment(bestFragmentId);
-        // std::cout << "HERE2" << std::endl << std::endl;
         std::cout << plane.GetBestFragmentDiff2() << ' ' << bigDiff2 << std::endl;
         std::cout << std::endl;
     }

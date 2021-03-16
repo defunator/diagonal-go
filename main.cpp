@@ -45,20 +45,21 @@ void initGKLS() {
 }
 
 
-double f(const array<double, 10>& x) {
-    array<double, 10> y;
-    for (size_t i = 0; i != 10; ++i) {
-        y[i] = 1 + (x[i] - 1) / 4;
-    }
-    double f = 0;
-    f += 10 * sin(M_PI * y[0]) * sin(M_PI * y[0]);
-    f += (y[9] - 1) * (y[9] - 1);
-    for (size_t i = 0; i != 9; ++i) {
-        f += (y[i] - 1) * (y[i] - 1) * (1 + 10 * sin(M_PI * y[i + 1]) * sin(M_PI * y[i + 1]));
-    }
-    return M_PI * f / 10;
-    // double x1 = x[0];
-    // double x2 = x[1];
+double f(const array<double, 2>& x) {
+    // array<double, 10> y;
+    // for (size_t i = 0; i != 10; ++i) {
+    //     y[i] = 1 + (x[i] - 1) / 4;
+    // }
+    // double f = 0;
+    // f += 10 * sin(M_PI * y[0]) * sin(M_PI * y[0]);
+    // f += (y[9] - 1) * (y[9] - 1);
+    // for (size_t i = 0; i != 9; ++i) {
+    //     f += (y[i] - 1) * (y[i] - 1) * (1 + 10 * sin(M_PI * y[i + 1]) * sin(M_PI * y[i + 1]));
+    // }
+    // return M_PI * f / 10;
+
+    double x1 = x[0];
+    double x2 = x[1];
     // double x3 = x[2];
 
     // double s1 = 0;
@@ -80,7 +81,7 @@ double f(const array<double, 10>& x) {
     // return 2 * x1 * x1 - 1.05 * x1 * x1 * x1 * x1 + x1 * x1 * x1 * x1 * x1 * x1 / 6 + x1 * x2 + x2 * x2;
     // return -sin(2 * x1 + 1) - 2 * sin(3 * x2 + 2);
     // return -4 * x1 * x2 * sin(4 * M_PI * x2);
-    // return 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2;
+    return 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2;
 }
 
 // double bruteSearch(const array<double, 2>& left, const array<double, 2>& right) {
@@ -105,12 +106,12 @@ double f(const array<double, 10>& x) {
 int main() {
     initGKLS();
 
-    NSequential::Optimizer<10> op;
-    array<double, 10> left;
-    array<double, 10> right;
+    NSequential::Optimizer<2> op;
+    array<double, 2> left;
+    array<double, 2> right;
     left.fill(-10);
     right.fill(10);
-    array<double, 10> res;
+    array<double, 2> res;
     double optimum = op.optimize(left, right, f, res);
     cout << "RESULT:" << endl;
     cout << "X = (";

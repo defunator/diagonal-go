@@ -32,17 +32,11 @@ void NSequential::Plane<N>::addPoint(
     const std::array<std::string, N>& pointCode,
     std::size_t pointId
 ) {
-    // if (GetPointIdByCode(pointCode) == pointId + 1) {
-    //     return;
-    // }
-    // std::cout << "add " << pointId << std::endl;
     for (std::size_t i = 0; i != N; ++i) {
         std::size_t lastNonZero = getLastNonZero(pointCode[i]);
         std::string realCode = pointCode[i].substr(0, lastNonZero + 1);
-        // std::cout << realCode << std::endl;
         codeToPointId[i][realCode].insert(pointId);
     }
-    // std::cout << std::endl;
     assert(GetPointIdByCode(pointCode) != 0);
 }
 
@@ -52,15 +46,8 @@ void NSequential::Plane<N>::deletePoint(
     const std::array<std::string, N>& pointCode
 ) {
     std::size_t pointId = GetPointIdByCode(pointCode) - 1;
-    // std::cout << "pointId = " << pointId << std::endl;
-    // std::cout << "delete" << std::endl;
     for (std::size_t i = 0; i != N; ++i) {
         const std::string &code = pointCode[i];
-        // std::cout << code << '(';
-        // for (auto el : codeToPointId[i][code]) {
-            // std::cout << el << ", ";
-        // }
-        // std::cout << ')' << std::endl;
         std::size_t lastNonZero = getLastNonZero(code);
         std::string realCode = code.substr(0, lastNonZero + 1);
         auto idToRemove = codeToPointId[i][realCode].find(pointId);
@@ -69,7 +56,6 @@ void NSequential::Plane<N>::deletePoint(
             codeToPointId[i].erase(realCode);
         }
     }
-    // std::cout << std::endl;
 }
 
 
@@ -78,16 +64,6 @@ void NSequential::Plane<N>::updPointIds(
     std::multiset<std::size_t> &pointIds,
     const std::multiset<std::size_t> &newPointIds
 ) {
-    // std::cout << "pointIds = ";
-    // for (auto& el : pointIds) {
-    //     std::cout << el << ' ';
-    // }
-    // std::cout << std::endl;
-    // std::cout << "newPointIds = ";
-    // for (auto& el : newPointIds) {
-    //     std::cout << el << ' ';
-    // }
-    // std::cout << std::endl;
     if (pointIds.empty()) {
         pointIds = newPointIds;
     } else {
@@ -101,12 +77,6 @@ void NSequential::Plane<N>::updPointIds(
             pointIds.insert(el);
         }
     }
-    // std::cout << "pointIds = ";
-    // for (auto& el : pointIds) {
-    //     std::cout << el << ' ';
-    // }
-    // std::cout << std::endl;
-    // std::cout << std::endl;
 }
 
 
@@ -182,20 +152,15 @@ template<std::size_t N>
 std::size_t NSequential::Plane<N>::GetPointIdByCode(
     const std::array<std::string, N> &pointCode
 ) {
-    // std::cout << "GET" << std::endl;
     std::multiset<std::size_t> pointIds;
     for (std::size_t i = 0; i != N; ++i) {
-        // std::cout << pointCode[i] << std::endl;
         std::size_t lastNonZero = getLastNonZero(pointCode[i]);
         std::string realCode = pointCode[i].substr(0, lastNonZero + 1);
-        // std::cout << realCode << std::endl;
         updPointIds(pointIds, codeToPointId[i][realCode]);
         if (pointIds.empty()) { // Point not found
-            // std::cout << "Not found!" << std::endl << std::endl;
             return 0;
         }
     }
-    // std::cout << std::endl;
     return *pointIds.begin() + 1;
 }
 
@@ -210,15 +175,7 @@ std::size_t NSequential::Plane<N>::GetPointIdByFragmentCode(
     std::size_t fragmentId,
     bool leftBorder
 ) {
-    // for (auto& s: searchFragments[fragmentId].code) {
-    //     std::cout << s << std::endl;
-    // }
     searchFragments[fragmentId].TransformToPointCode(leftBorder);
-    // std::cout << "GET" << std::endl;
-    // for (auto& s: searchFragments[fragmentId].code) {
-    //     std::cout << s << std::endl;
-    // }
-    // std::cout << std::endl;
     std::size_t pointId = GetPointIdByCode(searchFragments[fragmentId].code);
     searchFragments[fragmentId].InvTransformToPointCode(leftBorder);
     return pointId;
@@ -227,21 +184,11 @@ std::size_t NSequential::Plane<N>::GetPointIdByFragmentCode(
 
 template<std::size_t N>
 void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
-    // std::cout << "START" << std::endl;
-    // for (auto& s : searchFragments[fragmentId].code) {
-    //     std::cout << s << std::endl;
-    // }
     std::size_t divideDim = searchFragments[fragmentId].getDivideDim();
     std::size_t leftBase = GetPointIdByFragmentCode(fragmentId) - 1;
     std::size_t rightBase = GetPointIdByFragmentCode(fragmentId, false) - 1;
-    // std::cout << "DivideFragment" << std::endl;
-    // for (auto& s : searchFragments[fragmentId].code) {
-    //     std::cout << s << std::endl;
-    // }
-    // std::cout << leftBase << ' ' << rightBase << std::endl;
 
     deleteFragmentPoints(fragmentId);
-    // std::cout << "deleted" << std::endl;
     NSequential::Fragment<N> zeroFrag(searchFragments[fragmentId]);
     searchFragments[fragmentId].Divide('0', zeroFrag);
     searchFragments.push_back(std::move(zeroFrag));
@@ -285,7 +232,6 @@ void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
         right = pointCoordinates.size();
     }
     --left, --right;
-    // std::cout << left << ' ' << right << std::endl;
     addFragmentPoints(fragmentId, left, right);
     addFragmentPoints(searchFragments.size() - 1, left, rightBase);
     addFragmentPoints(searchFragments.size() - 2, leftBase, right);
