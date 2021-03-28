@@ -63,7 +63,7 @@ public:
 
     void DivideFragment(std::size_t fragmentId);
 
-    double GetBestFragmentDiff2();
+    double GetBestFragmentDiff();
     double GetBestPoint(std::array<double, N>& optimum);
 
     std::size_t GetBestFragmentId();
@@ -199,7 +199,7 @@ NSequential::Plane<N>::Plane(
         NSequential::Fragment<N>(std::move(code), std::move(diff))
     ));
     lambdaMax = std::max(
-        std::abs(pointValues[0] - pointValues[1]) / std::sqrt(searchFragments[0].diff2),
+        std::abs(pointValues[0] - pointValues[1]) / searchFragments[0].diff,
         std::numeric_limits<double>::epsilon()
     );
 }
@@ -296,7 +296,7 @@ void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
             }
             lambdaMax = std::max(
                 lambdaMax,
-                std::abs(pointValues[x1] - pointValues[x2]) / std::sqrt(searchFragments.back().diff2)
+                std::abs(pointValues[x1] - pointValues[x2]) / searchFragments.back().diff
             );
         }
     }
@@ -304,14 +304,14 @@ void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
 
 
 template<std::size_t N>
-double NSequential::Plane<N>::GetBestFragmentDiff2() {
+double NSequential::Plane<N>::GetBestFragmentDiff() {
     std::size_t bestI = 0;
     for (std::size_t i = 0; i != searchFragments.size(); ++i) {
         if (searchFragments[bestI].R < searchFragments[i].R) {
             bestI = i;
         }
     }
-    return searchFragments[bestI].diff2;
+    return searchFragments[bestI].diff;
 }
 
 
@@ -348,7 +348,7 @@ std::size_t NSequential::Plane<N>::GetBestFragmentId() {
         }
     }
     std::cout << "bestFragment = " << bestFragment << std::endl;
-    std::cout << "diff = " << searchFragments[bestFragment].diff2 << std::endl;
+    std::cout << "diff = " << searchFragments[bestFragment].diff << std::endl;
     std::cout << "sz = " << pointValues.size() << std::endl;
     std::cout << "fragSZ = " << searchFragments.size() << std::endl;
     return bestFragment;

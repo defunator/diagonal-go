@@ -59,12 +59,13 @@ double NSequential::Optimizer<N>::optimize(
     double r,
     double C) {
     NSequential::Plane<N> plane(left, right, f, eps, r, C);
-    double bigDiff2 = 0;
+    double bigDiff = 0;
     for (std::size_t i = 0; i != N; ++i) {
-        bigDiff2 += (right[i] - left[i]) * (right[i] - left[i]);
+        bigDiff += (right[i] - left[i]) * (right[i] - left[i]);
     }
-    bigDiff2 *= eps * eps;
-    while (plane.GetBestFragmentDiff2() > bigDiff2) {
+    bigDiff = std::sqrt(bigDiff);
+    bigDiff *= eps;
+    while (plane.GetBestFragmentDiff() > bigDiff) {
         std::size_t bestFragmentId = plane.GetBestFragmentId();
         std::cout << "f(X*) = " << plane.GetBestPoint(optimum) << std::endl;
         for (auto el : optimum) {
@@ -72,7 +73,7 @@ double NSequential::Optimizer<N>::optimize(
         }
         std::cout << std::endl;
         plane.DivideFragment(bestFragmentId);
-        std::cout << plane.GetBestFragmentDiff2() << ' ' << bigDiff2 << std::endl;
+        std::cout << plane.GetBestFragmentDiff() << ' ' << bigDiff << std::endl;
         std::cout << std::endl;
     }
     return plane.GetBestPoint(optimum);
