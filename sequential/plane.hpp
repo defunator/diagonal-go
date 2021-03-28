@@ -140,7 +140,6 @@ void NSequential::Plane<N>::updPointIds(
 template<std::size_t N>
 void NSequential::Plane<N>::deleteFragmentPoints(std::size_t fragmentId) {
     searchFragments[fragmentId].TransformToPointCode();
-    // std::cout << "Try delete" << std::endl;
     deletePoint(searchFragments[fragmentId].getCode());
     searchFragments[fragmentId].InvTransformToPointCode();
     searchFragments[fragmentId].TransformToPointCode(false);
@@ -236,18 +235,16 @@ std::size_t NSequential::Plane<N>::GetPointIdByFragmentCode(
 
 template<std::size_t N>
 void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
-    std::size_t divideDim = searchFragments[fragmentId].getDivideDim();
+    std::size_t divideDim = searchFragments[fragmentId].getDivideDim().second;
     std::size_t leftBase = GetPointIdByFragmentCode(fragmentId) - 1;
     std::size_t rightBase = GetPointIdByFragmentCode(fragmentId, false) - 1;
 
     deleteFragmentPoints(fragmentId);
-    NSequential::Fragment<N> zeroFrag(searchFragments[fragmentId]);
-    searchFragments[fragmentId].Divide('0', zeroFrag);
-    searchFragments.push_back(std::move(zeroFrag));
-    NSequential::Fragment<N> twoFrag(searchFragments[fragmentId]);
-    searchFragments[fragmentId].Divide('2', twoFrag);
-    searchFragments.push_back(std::move(twoFrag));
-    searchFragments[fragmentId].InplaceDivide('1');
+    searchFragments.push_back(searchFragments[fragmentId]);
+    searchFragments.back().Divide('0');
+    searchFragments.push_back(searchFragments[fragmentId]);
+    searchFragments.back().Divide('2');
+    searchFragments[fragmentId].Divide('1');
 
     std::size_t left = GetPointIdByFragmentCode(fragmentId);
     std::size_t right = GetPointIdByFragmentCode(fragmentId, false);

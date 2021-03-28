@@ -16,7 +16,9 @@ template<std::size_t N>
 class Fragment {
 private:
     std::array<std::string, N> code;
-    std::string isOddCentral;
+    // if direction of the diagonal is changed
+    std::array<bool, N> isOddCentral;
+    // to divide by max len
     std::set<std::pair<double, std::size_t>> divideDim;
 
 public:
@@ -33,15 +35,13 @@ public:
     void TransformToPointCode(bool leftBorder = true);
     void InvTransformToPointCode(bool leftBorder = true);
 
-    std::size_t getDivideDim();
+    std::pair<double, std::size_t> getDivideDim();
     void updDivideDim();
 
     void updR(double C, double r, std::size_t k, double dMax,
                 double lambdaMax, double fLeft, double fRight);
 
-    void addDivideInfo(char planeId);
-    void Divide(char planeId, Fragment &other);
-    void InplaceDivide(char planeId);
+    void Divide(char planeId);
 
     const std::array<std::string, N>& getCode() const;
 
@@ -56,8 +56,8 @@ NSequential::Fragment<N>::Fragment(
     const std::array<std::string, N>& code_,
     const std::set<std::pair<double, std::size_t>>& divideDim_)
     : code(code_)
-    , isOddCentral(std::string(N, false))
     , divideDim(divideDim_) {
+    isOddCentral.fill(false);
     diff = 0;    
     for (auto& el : divideDim) {
         diff += el.first * el.first;
@@ -71,8 +71,8 @@ NSequential::Fragment<N>::Fragment(
     std::array<std::string, N>&& code_,
     std::set<std::pair<double, std::size_t>>&& divideDim_)
     : code(std::move(code_))
-    , isOddCentral(std::string(N, false))
     , divideDim(std::move(divideDim_)) {
+    isOddCentral.fill(false);
     diff = 0;    
     for (auto& el : divideDim) {
         diff += el.first * el.first;
@@ -100,13 +100,10 @@ NSequential::Fragment<N>::Fragment(NSequential::Fragment<N> &&other)
 template<std::size_t N>
 void NSequential::Fragment<N>::TransformToPointCode(bool leftBorder) {
     for (std::size_t i = 0; i != N; ++i) {
-        if (leftBorder && isOddCentral[i]) {
-            std::size_t j = code[i].size() - 1;
-            for (; j != 0 && code[i][j] == '2'; --j) {
-                code[i][j] = '0';
-            }
-            code[i][j] = '0' + (code[i][j] - '0' + 1) % 3;
-        } else if (!leftBorder && !isOddCentral[i]) {
+        // diagonal changed direction
+        if (
+            (leftBorder && isOddCentral[i]) || (!leftBorder && !isOddCentral[i])
+        ) {
             std::size_t j = code[i].size() - 1;
             for (; j != 0 && code[i][j] == '2'; --j) {
                 code[i][j] = '0';
@@ -120,13 +117,9 @@ void NSequential::Fragment<N>::TransformToPointCode(bool leftBorder) {
 template<std::size_t N>
 void NSequential::Fragment<N>::InvTransformToPointCode(bool leftBorder) {
     for (std::size_t i = 0; i != N; ++i) {
-        if (leftBorder && isOddCentral[i]) {
-            std::size_t j = code[i].size() - 1;
-            for (; j != 0 && code[i][j] == '0'; --j) {
-                code[i][j] = '2';
-            }
-            code[i][j] = '0' + (code[i][j] - '0' + 2) % 3;
-        } else if (!leftBorder && !isOddCentral[i]) {
+        if (
+            (leftBorder && isOddCentral[i]) || (!leftBorder && !isOddCentral[i])
+        ) {
             std::size_t j = code[i].size() - 1;
             for (; j != 0 && code[i][j] == '0'; --j) {
                 code[i][j] = '2';
@@ -138,8 +131,8 @@ void NSequential::Fragment<N>::InvTransformToPointCode(bool leftBorder) {
 
 
 template<std::size_t N>
-std::size_t NSequential::Fragment<N>::getDivideDim() {
-    return divideDim.rbegin()->second;
+std::pair<double, std::size_t> NSequential::Fragment<N>::getDivideDim() {
+    return *divideDim.rbegin();
 }
 
 
@@ -157,44 +150,30 @@ void NSequential::Fragment<N>::updR(
     double C, double r, std::size_t k,
     double dMax, double lambdaMax, double fLeft, double fRight
 ) {
-    double lambda = std::abs(fRight - fLeft) / diff;
-    double gamma = lambdaMax * diff / dMax;
-    double mu = (r + C / k) * std::max(lambda, std::max(
-        std::numeric_limits<double>::epsilon(),
-        gamma
-    ));
+    // double lambda = std::abs(fRight - fLeft) / diff;
+    // double gamma = lambdaMax * diff / dMax;
+    // double mu = (r + C / k) * std::max(lambda, std::max(
+    //     std::numeric_limits<double>::epsilon(),
+    //     gamma
+    // ));
     // R = mu * diff / 2 - (fLeft + fRight) / 2;
-    mu = (r + C / k) * lambdaMax;
+    double mu = (r + C / k) * lambdaMax;
     R = mu * diff + (fLeft - fRight) * (fLeft - fRight) / (mu * diff) - 2 * (fLeft + fRight);
 }
 
 
 template<std::size_t N>
-void NSequential::Fragment<N>::addDivideInfo(char planeId) {
-    std::size_t divDim = getDivideDim();
+void NSequential::Fragment<N>::Divide(char planeId) {
+    auto[curDiff, divDim] = getDivideDim();
     code[divDim].push_back(planeId);
     if (planeId == '1') {
-        isOddCentral[divDim] = ~isOddCentral[divDim];
+        isOddCentral[divDim] = !isOddCentral[divDim];
     }
-    double curDiff = divideDim.rbegin()->first;
     diff = diff * diff - curDiff * curDiff;
     curDiff /= 3.;
     diff += curDiff * curDiff;
     diff = std::sqrt(diff);
     updDivideDim();
-}
-
-
-template<std::size_t N>
-void NSequential::Fragment<N>::Divide(char planeId,
-                                        NSequential::Fragment<N> &other) {
-    other.addDivideInfo(planeId);
-}
-
-
-template<std::size_t N>
-void NSequential::Fragment<N>::InplaceDivide(char planeId) {
-    addDivideInfo(planeId);
 }
 
 
