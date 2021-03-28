@@ -14,10 +14,12 @@ namespace NSequential {
  */
 template<std::size_t N>
 class Fragment {
-public:
+private:
     std::array<std::string, N> code;
     std::string isOddCentral;
     std::set<std::pair<double, std::size_t>> divideDim;
+
+public:
     double diff2;
     double R;
 
@@ -39,6 +41,10 @@ public:
 
     void Divide(char planeId, Fragment &other);
     void InplaceDivide(char planeId);
+
+    const std::array<std::string, N>& getCode() const;
+
+    bool isOddDim(std::size_t dim) const;
 };
 
 } // end namespace NSequential
@@ -193,3 +199,17 @@ void NSequential::Fragment<N>::InplaceDivide(char planeId) {
     diff2 += curDiff * curDiff;
     updDivideDim();
 }
+
+
+template<std::size_t N>
+const std::array<std::string, N>& NSequential::Fragment<N>::getCode() const {
+    return code;
+}
+
+
+template<std::size_t N>
+bool NSequential::Fragment<N>::isOddDim(std::size_t dim) const {
+    return isOddCentral[dim];
+}
+
+

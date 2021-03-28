@@ -141,10 +141,10 @@ template<std::size_t N>
 void NSequential::Plane<N>::deleteFragmentPoints(std::size_t fragmentId) {
     searchFragments[fragmentId].TransformToPointCode();
     // std::cout << "Try delete" << std::endl;
-    deletePoint(searchFragments[fragmentId].code);
+    deletePoint(searchFragments[fragmentId].getCode());
     searchFragments[fragmentId].InvTransformToPointCode();
     searchFragments[fragmentId].TransformToPointCode(false);
-    deletePoint(searchFragments[fragmentId].code);
+    deletePoint(searchFragments[fragmentId].getCode());
     searchFragments[fragmentId].InvTransformToPointCode(false);
 }
 
@@ -156,10 +156,10 @@ void NSequential::Plane<N>::addFragmentPoints(
     std::size_t right
 ) {
     searchFragments[fragmentId].TransformToPointCode();
-    addPoint(searchFragments[fragmentId].code, left);
+    addPoint(searchFragments[fragmentId].getCode(), left);
     searchFragments[fragmentId].InvTransformToPointCode();
     searchFragments[fragmentId].TransformToPointCode(false);
-    addPoint(searchFragments[fragmentId].code, right);
+    addPoint(searchFragments[fragmentId].getCode(), right);
     searchFragments[fragmentId].InvTransformToPointCode(false);
 }
 
@@ -228,7 +228,7 @@ std::size_t NSequential::Plane<N>::GetPointIdByFragmentCode(
     bool leftBorder
 ) {
     searchFragments[fragmentId].TransformToPointCode(leftBorder);
-    std::size_t pointId = GetPointIdByCode(searchFragments[fragmentId].code);
+    std::size_t pointId = GetPointIdByCode(searchFragments[fragmentId].getCode());
     searchFragments[fragmentId].InvTransformToPointCode(leftBorder);
     return pointId;
 }
@@ -253,7 +253,7 @@ void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
     std::size_t right = GetPointIdByFragmentCode(fragmentId, false);
     if (left == 0) {
         std::array<double, N> leftCoord = pointCoordinates[leftBase];
-        if (searchFragments[fragmentId].isOddCentral[divideDim]) {
+        if (searchFragments[fragmentId].isOddDim(divideDim)) {
             leftCoord[divideDim] = (pointCoordinates[leftBase][divideDim] +
                                     2 * pointCoordinates[rightBase][divideDim]) / 3;
         } else {
@@ -269,7 +269,7 @@ void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
     }
     if (right == 0) {
         std::array<double, N> rightCoord = pointCoordinates[rightBase];
-        if (searchFragments[fragmentId].isOddCentral[divideDim]) {
+        if (searchFragments[fragmentId].isOddDim(divideDim)) {
             rightCoord[divideDim] = (2 * pointCoordinates[leftBase][divideDim] +
                                     pointCoordinates[rightBase][divideDim]) / 3;
         } else {
