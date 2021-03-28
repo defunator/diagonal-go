@@ -39,8 +39,7 @@ public:
 
     std::pair<double, std::size_t> GetDivideDim();
 
-    void UpdR(double C, double r, std::size_t k,
-                double lambdaMax, double fLeft, double fRight);
+    void UpdR(double mu, double fLeft, double fRight);
 
     void Divide(char planeId);
 
@@ -147,18 +146,7 @@ void NSequential::Fragment<N>::updDivideDim() {
 
 
 template<std::size_t N>
-void NSequential::Fragment<N>::UpdR(
-    double C, double r, std::size_t k,
-    double lambdaMax, double fLeft, double fRight
-) {
-    // double lambda = std::abs(fRight - fLeft) / diff;
-    // double gamma = lambdaMax * diff / dMax;
-    // double mu = (r + C / k) * std::max(lambda, std::max(
-    //     std::numeric_limits<double>::epsilon(),
-    //     gamma
-    // ));
-    // R = mu * diff / 2 - (fLeft + fRight) / 2;
-    double mu = (r + C / k) * lambdaMax;
+void NSequential::Fragment<N>::UpdR(double mu, double fLeft, double fRight) {
     R = mu * diff + (fLeft - fRight) * (fLeft - fRight) / (mu * diff) - 2 * (fLeft + fRight);
 }
 

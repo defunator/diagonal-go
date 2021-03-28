@@ -317,33 +317,21 @@ double NSequential::Plane<N>::GetBestPoint(std::array<double, N>& optimum) {
 
 template<std::size_t N>
 std::size_t NSequential::Plane<N>::GetBestFragmentId() {
-    // double dMax = 0;
-    // double lambdaMax = 0;
-    // for (std::size_t i = 0; i != searchFragments.size(); ++i) {
-    //     dMax = std::max(dMax, searchFragments[i].diff2);
-    //     double fLeft = pointValues[GetPointIdByFragmentCode(i)];
-    //     double fRight = pointValues[GetPointIdByFragmentCode(i, false)];
-    //     lambdaMax = std::max(
-    //         lambdaMax,
-    //         std::abs(fRight - fLeft) / std::sqrt(searchFragments[i].diff2)
-    //     );
-    // }
     std::cout << "lambdaMax = " << lambdaMax << std::endl;
-    // double dMax = std::sqrt(dMax);
-    std::size_t bestFragment = 0;
     std::size_t k = std::max(searchFragments.size() / 2, 1ul);
+    double mu = (r + C / k) * lambdaMax;
+    std::size_t bestFragment = 0;
     for (std::size_t i = 0; i != searchFragments.size(); ++i) {
         double fLeft = pointValues[GetPointIdByFragmentCode(i) - 1];
         double fRight = pointValues[GetPointIdByFragmentCode(i, false) - 1];
-        searchFragments[i].UpdR(C, r, k, lambdaMax, fLeft, fRight);
+        searchFragments[i].UpdR(mu, fLeft, fRight);
         if (searchFragments[bestFragment].R < searchFragments[i].R) {
             bestFragment = i;
         }
     }
-    std::cout << '\n';
     std::cout << "bestFragment = " << bestFragment << std::endl;
     std::cout << "diff = " << searchFragments[bestFragment].diff << std::endl;
     std::cout << "sz = " << pointValues.size() << std::endl;
-    std::cout << "fragSZ = " << searchFragments.size() << std::endl;
+    std::cout << "fragSZ = " << searchFragments.size() << std::endl << '\n';
     return bestFragment;
 }
