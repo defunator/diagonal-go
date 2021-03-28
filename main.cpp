@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -11,117 +12,100 @@ using namespace std;
 
 random_device rand_dev;
 mt19937 generator(rand_dev());
-uniform_real_distribution<double> distribution(-1.0, 1.0);
-const size_t N_GKLS = 7;
-vector<vector<double>> A(N_GKLS, vector<double>(N_GKLS));
-vector<vector<double>> B(N_GKLS, vector<double>(N_GKLS));
-vector<vector<double>> C(N_GKLS, vector<double>(N_GKLS));
-vector<vector<double>> D(N_GKLS, vector<double>(N_GKLS));
-
-
-void initGKLS() {
-    for (size_t i = 0; i != N_GKLS; ++i) {
-        for (size_t j = 0; j != N_GKLS; ++j) {
-            A[i][j] = distribution(generator);
-            B[i][j] = distribution(generator);
-            C[i][j] = distribution(generator);
-            D[i][j] = distribution(generator);
-        }
-    }
-    // for (size_t i = 0; i != N_GKLS; ++i) {
-    //     for (size_t j = 0; j != N_GKLS; ++j) {
-    //         cout << A[i][j] << "* sin(pi*" << i << "*x_1)*sin(pi*" << j << "*x_2)+";
-    //         cout << B[i][j] << "* cos(pi*" << i << "*x_1)*cos(pi*" << j << "*x_2)+";
-    //     }
-    // }
-    // cout << endl;
-    // for (size_t i = 0; i != N_GKLS; ++i) {
-    //     for (size_t j = 0; j != N_GKLS; ++j) {
-    //         cout << C[i][j] << "* sin(pi*" << i << "*x_1)*sin(pi*" << j << "*x_2)+";
-    //         cout << D[i][j] << "* cos(pi*" << i << "*x_1)*cos(pi*" << j << "*x_2)+";
-    //     }
-    // }
-    // cout << endl;
-}
+uniform_real_distribution<double> distribution(0, 1.0);
 
 
 double f(const array<double, 2>& x) {
-    // array<double, 10> y;
-    // for (size_t i = 0; i != 10; ++i) {
-    //     y[i] = 1 + (x[i] - 1) / 4;
-    // }
-    // double f = 0;
-    // f += 10 * sin(M_PI * y[0]) * sin(M_PI * y[0]);
-    // f += (y[9] - 1) * (y[9] - 1);
-    // for (size_t i = 0; i != 9; ++i) {
-    //     f += (y[i] - 1) * (y[i] - 1) * (1 + 10 * sin(M_PI * y[i + 1]) * sin(M_PI * y[i + 1]));
-    // }
-    // return M_PI * f / 10;
-
     double x1 = x[0];
     double x2 = x[1];
-    cout << "f(" << x1 << ", " << x2 << ") = " << 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2 << endl;
-    // double x3 = x[2];
 
-    // double s1 = 0;
-    // double s2 = 0;
-    // for (size_t i = 0; i != N_GKLS; ++i) {
-    //     for (size_t j = 0; j != N_GKLS; ++j) {
-    //         double a = sin((i + 1) * M_PI * x1) * sin((j + 1) * M_PI * x2);
-    //         double b = cos((i + 1) * M_PI * x1) * cos((j + 1) * M_PI * x2);
-    //         s1 += A[i][j] * a + B[i][j] * b;
-    //         s2 += C[i][j] * a + D[i][j] * b;
-    //     }
-    // }
-    // double f = -sqrt(s1 * s1 + s2 * s2);
-    // return f;
-
-    // return 0.01 * (x1 * x2 + (x1 - M_PI) * (x1 - M_PI) + 3 * (x2 - M_PI) * (x2 - M_PI)) - abs(sin(x1) * sin(2 * x2));
-    // return (x1 * x1 - 2 * x2 * x2 + x3 * x3) * sin(x1) * sin(x2) * sin(x3);
-    // return 100 * (x2 - x1 * x1) * (x2 - x1 * x1) + (x1 - 1) * (x1 - 1);
-    // return 2 * x1 * x1 - 1.05 * x1 * x1 * x1 * x1 + x1 * x1 * x1 * x1 * x1 * x1 / 6 + x1 * x2 + x2 * x2;
-    // return -sin(2 * x1 + 1) - 2 * sin(3 * x2 + 2);
-    // return -4 * x1 * x2 * sin(4 * M_PI * x2);
-    return 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2;
+    // return 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2; // [-10, 10]
+    // return -4 * x1 * x2 * sin(4 * M_PI * x2); // [0, 1]
+    return 100 * (x2 - x1 * x1) * (x2 - x1 * x1) + (x1 - 1) * (x1 - 1); // [-2, 8]
+    // return (x1 * x1 + x2 - 11) * (x1 * x1 + x2 - 11) + (x1 + x2 * x2 - 7) * (x1 + x2 * x2 - 7); // [-2, 6]
+    // return 2 * x1 * x1 - 1.05 * x1 * x1 * x1 * x1 + x1 * x1 * x1 * x1 * x1 * x1 / 6 + x1 * x2 + x2 * x2; // [-5, 5]
 }
 
-// double bruteSearch(const array<double, 2>& left, const array<double, 2>& right) {
-//     double d = 1e-4;
-//     array<double, 2> best({0, 0});
-//     for (double x_1 = left[0]; x_1 < right[0]; x_1 += d) {
-//         for (double x_2 = left[1]; x_2 < right[1]; x_2 += d) {
-//             array<double, 2> x({x_1, x_2});
-//             if (f(x) < f(best)) {
-//                 best = x;
-//             }
-//         }
-//     }
-//     for (auto el : best) {
-//         cout << el << ' ';
-//     }
-//     cout << endl;
-//     return f(best);
-// }
+
+double monteCarloSearch(const array<double, 2>& left,
+                const array<double, 2>& right, array<double, 2>& res) {
+    double d = 1e-4;
+    res = left;
+    size_t f_count = 0;
+    while (42) {
+        array<double, 2> tmp_res(res);
+        for (size_t i = 0; i != 400; ++i, ++f_count) {
+            array<double, 2> pt;
+            pt[0] = left[0] + distribution(generator) * (right[0] - left[0]);
+            pt[1] = left[1] + distribution(generator) * (right[1] - left[1]);
+            if (f(pt) < f(tmp_res)) {
+                tmp_res = pt;
+            }
+        }
+        if (f(res) - f(tmp_res) < d) {
+            break;
+        }
+        res = tmp_res;
+    }
+    cout << "F count = " << f_count << endl;
+    return f(res);
+}
 
 
 int main() {
-    initGKLS();
-
     NSequential::Optimizer<2> op;
     array<double, 2> left;
     array<double, 2> right;
-    left.fill(-10);
-    right.fill(10);
+    left.fill(-2);
+    right.fill(8);
     array<double, 2> res;
+
+    // chrono::steady_clock::time_point begin = chrono::steady_clock::now();
     double optimum = op.optimize(left, right, f, res);
-    cout << "RESULT:" << endl;
+    // // chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
+    cout << "DIAGONAL RESULT:" << endl;
     cout << "X = (";
-    for (double el: res) {
-        cout << el << ", ";
+    for (size_t i = 0; i != res.size(); ++i) {
+        cout << res[i];
+        if (i != res.size() - 1) {
+            cout << ", ";
+        }
     }
-    cout << ')' << endl;
-    cout << "y = " << optimum << endl;
-    // cout << "REAL BEST:" << endl;
-    // double realOpt = bruteSearch(left, right);
-    // cout << "f(X*) = " << realOpt << endl;
+    cout << ")" << endl;
+    cout << "f(X) = " << optimum << endl;
+    // cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl;
+
+
+    // cout << "BRUTE FORCE RESULT:" << endl;
+    // begin = chrono::steady_clock::now();
+    // double realOpt = bruteSearch(left, right, res);
+    // end = chrono::steady_clock::now();
+    // cout << "X = (";
+    // for (size_t i = 0; i != res.size(); ++i) {
+    //     cout << res[i];
+    //     if (i != res.size() - 1) {
+    //         cout << ", ";
+    //     }
+    // }
+    // cout << ")" << endl;
+    // cout << "f(X) = " << realOpt << endl;
+    // cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl;
+
+    cout << "MONTE-CARLO RESULT:" << endl;
+    // begin = chrono::steady_clock::now();
+    double monteCarlo = monteCarloSearch(left, right, res);
+    // end = chrono::steady_clock::now();
+    cout << "X = (";
+    for (size_t i = 0; i != res.size(); ++i) {
+        cout << res[i];
+        if (i != res.size() - 1) {
+            cout << ", ";
+        }
+    }
+    cout << ")" << endl;
+    cout << "f(X) = " << monteCarlo << endl;
+    // cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl;
+
+    return 0;
 }

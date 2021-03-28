@@ -37,7 +37,7 @@ public:
         const std::function<double(const std::array<double, N>&)>& f,
         std::array<double, N>& optimum,
         double eps = 0.02,
-        double r = 2.8,
+        double r = 1.3,
         double C = 100
     );
 };
@@ -67,14 +67,15 @@ double NSequential::Optimizer<N>::optimize(
     bigDiff *= eps;
     while (plane.GetBestFragmentDiff() > bigDiff) {
         std::size_t bestFragmentId = plane.GetBestFragmentId();
-        std::cout << "f(X*) = " << plane.GetBestPoint(optimum) << std::endl;
-        for (auto el : optimum) {
-            std::cout << el << ' ';
-        }
-        std::cout << std::endl;
+        // std::cout << "f(X*) = " << plane.GetBestPoint(optimum) << std::endl;
+        // for (auto el : optimum) {
+        //     std::cout << el << ' ';
+        // }
+        // std::cout << std::endl;
         plane.DivideFragment(bestFragmentId);
-        std::cout << plane.GetBestFragmentDiff() << ' ' << bigDiff << std::endl;
-        std::cout << std::endl;
+        // std::cout << plane.GetBestFragmentDiff() << ' ' << bigDiff << std::endl;
+        // std::cout << std::endl;
     }
+    std::cout << "F count = " << plane.FCount() << std::endl;
     return plane.GetBestPoint(optimum);
 }

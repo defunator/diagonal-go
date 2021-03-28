@@ -65,6 +65,8 @@ public:
     double GetBestPoint(std::array<double, N>& optimum);
 
     std::size_t GetBestFragmentId();
+
+    std::size_t FCount();
 };
 
 } // end namespace NSequential
@@ -317,7 +319,7 @@ double NSequential::Plane<N>::GetBestPoint(std::array<double, N>& optimum) {
 
 template<std::size_t N>
 std::size_t NSequential::Plane<N>::GetBestFragmentId() {
-    std::cout << "lambdaMax = " << lambdaMax << std::endl;
+    // std::cout << "lambdaMax = " << lambdaMax << std::endl;
     std::size_t k = std::max(searchFragments.size() / 2, 1ul);
     double mu = (r + C / k) * lambdaMax;
     std::size_t bestFragment = 0;
@@ -329,9 +331,16 @@ std::size_t NSequential::Plane<N>::GetBestFragmentId() {
             bestFragment = i;
         }
     }
-    std::cout << "bestFragment = " << bestFragment << std::endl;
-    std::cout << "diff = " << searchFragments[bestFragment].diff << std::endl;
-    std::cout << "sz = " << pointValues.size() << std::endl;
-    std::cout << "fragSZ = " << searchFragments.size() << std::endl << '\n';
+    // std::cout << "bestFragment = " << bestFragment << std::endl;
+    // std::cout << "diff = " << searchFragments[bestFragment].diff << std::endl;
+    // std::cout << "sz = " << pointValues.size() << std::endl;
+    // std::cout << "fragSZ = " << searchFragments.size() << std::endl;
     return bestFragment;
 }
+
+
+template<std::size_t N>
+std::size_t NSequential::Plane<N>::FCount() {
+    return pointValues.size();
+}
+
