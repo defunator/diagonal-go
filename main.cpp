@@ -60,6 +60,7 @@ double f(const array<double, 2>& x) {
 
     double x1 = x[0];
     double x2 = x[1];
+    cout << "f(" << x1 << ", " << x2 << ") = " << 0.25 * x1 * x1 * x1 * x1 - 0.5 * x1 * x1 + 0.1 * x1 + 0.5 * x2 * x2 << endl;
     // double x3 = x[2];
 
     // double s1 = 0;

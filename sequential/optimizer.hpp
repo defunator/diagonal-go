@@ -58,7 +58,7 @@ double NSequential::Optimizer<N>::optimize(
     double eps,
     double r,
     double C) {
-    NSequential::Plane<N> plane(left, right, f, eps, r, C);
+    NSequential::Plane<N> plane(left, right, f, r, C);
     double bigDiff = 0;
     for (std::size_t i = 0; i != N; ++i) {
         bigDiff += (right[i] - left[i]) * (right[i] - left[i]);

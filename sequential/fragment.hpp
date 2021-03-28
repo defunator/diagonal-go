@@ -21,6 +21,8 @@ private:
     // to divide by max len
     std::set<std::pair<double, std::size_t>> divideDim;
 
+    void updDivideDim();
+
 public:
     double diff;
     double R;
@@ -35,17 +37,16 @@ public:
     void TransformToPointCode(bool leftBorder = true);
     void InvTransformToPointCode(bool leftBorder = true);
 
-    std::pair<double, std::size_t> getDivideDim();
-    void updDivideDim();
+    std::pair<double, std::size_t> GetDivideDim();
 
-    void updR(double C, double r, std::size_t k, double dMax,
+    void UpdR(double C, double r, std::size_t k,
                 double lambdaMax, double fLeft, double fRight);
 
     void Divide(char planeId);
 
-    const std::array<std::string, N>& getCode() const;
+    const std::array<std::string, N>& GetCode() const;
 
-    bool isOddDim(std::size_t dim) const;
+    bool IsOddDim(std::size_t dim) const;
 };
 
 } // end namespace NSequential
@@ -131,7 +132,7 @@ void NSequential::Fragment<N>::InvTransformToPointCode(bool leftBorder) {
 
 
 template<std::size_t N>
-std::pair<double, std::size_t> NSequential::Fragment<N>::getDivideDim() {
+std::pair<double, std::size_t> NSequential::Fragment<N>::GetDivideDim() {
     return *divideDim.rbegin();
 }
 
@@ -146,9 +147,9 @@ void NSequential::Fragment<N>::updDivideDim() {
 
 
 template<std::size_t N>
-void NSequential::Fragment<N>::updR(
+void NSequential::Fragment<N>::UpdR(
     double C, double r, std::size_t k,
-    double dMax, double lambdaMax, double fLeft, double fRight
+    double lambdaMax, double fLeft, double fRight
 ) {
     // double lambda = std::abs(fRight - fLeft) / diff;
     // double gamma = lambdaMax * diff / dMax;
@@ -164,7 +165,7 @@ void NSequential::Fragment<N>::updR(
 
 template<std::size_t N>
 void NSequential::Fragment<N>::Divide(char planeId) {
-    auto[curDiff, divDim] = getDivideDim();
+    auto[curDiff, divDim] = GetDivideDim();
     code[divDim].push_back(planeId);
     if (planeId == '1') {
         isOddCentral[divDim] = !isOddCentral[divDim];
@@ -178,13 +179,13 @@ void NSequential::Fragment<N>::Divide(char planeId) {
 
 
 template<std::size_t N>
-const std::array<std::string, N>& NSequential::Fragment<N>::getCode() const {
+const std::array<std::string, N>& NSequential::Fragment<N>::GetCode() const {
     return code;
 }
 
 
 template<std::size_t N>
-bool NSequential::Fragment<N>::isOddDim(std::size_t dim) const {
+bool NSequential::Fragment<N>::IsOddDim(std::size_t dim) const {
     return isOddCentral[dim];
 }
 
