@@ -2,7 +2,7 @@
 An approach to parallelize diagonal global optimization method for Lipschitz function with unknown constant
 
 # Сравнение с методом Монте-Карло
-![](./images/img1.png)
+![](./images/res.png)
 Считалось число вызовов функции `f(X)` до получения определенной относительной точности (`eps=0.1`). Были взяты следующие функции с такими параметрами (все со страницы 191):
 1. #19, `C=100, r=1.2`, `N_diag = 84`, `N_mc=2682`
 2. #1, `C=100`, `r=1.2`, `N_diag = 572`, `N_mc=5711`
