@@ -1,5 +1,5 @@
 #include "optimizer.hpp"
-// #include "parallel_naive.hpp"
+#include "parallel_naive.hpp"
 #include "tests.hpp"
 
 #include <array>
@@ -15,6 +15,7 @@ using namespace std;
 template <std::size_t N>
 void benchmarkTest(const NTest::Test<N>& test) {
     NSequential::Optimizer<N> optimizer;
+    // NParallel::Optimizer<N> optimizer;
     array<double, N> xMin;
 
     chrono::steady_clock::time_point begin = chrono::steady_clock::now();
@@ -49,7 +50,9 @@ int main() {
     // benchmarkTest(NTest::GetTest1());
     // benchmarkTest(NTest::GetTest2());
     benchmarkTest(NTest::GetTest3());
-    // benchmarkTest(NTest::GetTest4<10>());
+    // benchmarkTest(NTest::GetTest4<6>());
+    // benchmarkTest(NTest::GetTest5());
+    // benchmarkTest(NTest::GetTest6<4>());
 
     return 0;
 }

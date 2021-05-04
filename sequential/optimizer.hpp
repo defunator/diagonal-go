@@ -73,42 +73,31 @@ double NSequential::Optimizer<N>::optimize(
     bigDiff = std::sqrt(bigDiff);
     bigDiff *= eps;
     int i = 0;
-    while (plane.GetBestFragmentDiff() > bigDiff) {
-        // std::cout << plane.GetBestFragmentDiff() << std::endl;
-        // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        std::size_t bestFragmentId = plane.GetBestFragmentId();
-        // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        // std::cout << "GetPointIdByCode TIME = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
-    
-        // std::cout << "f(X*) = " << plane.GetBestPoint(optimum) << std::endl;
-        // for (auto el : optimum) {
-        //     std::cout << el << ' ';
-        // }
-        // std::cout << std::endl;
-        // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    double mean_divide = 0;
+    double mean_get_best = 0;
 
+    std::size_t bestFragmentId = plane.GetBestFragmentId();
+    while (plane.GetBestFragmentDiff() > bigDiff) {
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+        bestFragmentId = plane.GetBestFragmentId();
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        mean_get_best = 1. * (1. * i * mean_get_best + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
+
+        begin = std::chrono::steady_clock::now();
         plane.DivideFragment(bestFragmentId);
+        end = std::chrono::steady_clock::now();
+        mean_divide = 1. * (1. * i * mean_divide + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
+
         ++i;
-        // if (i == ) break;
-        // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        // std::cout << "DivideFragment TIME = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
-    
-        // std::cout << plane.GetBestFragmentDiff() << ' ' << bigDiff << std::endl;
-        // std::cout << std::endl;
-        // if (test.GetRelativeValueDiff(plane.GetBestPoint(optimum)) < 0.1) {
-        //     break;
-        // }
-        // if (i % 30 == 0) {
-        //     std::cout << i << ' ' << plane.GetBestFragmentDiff() << ' ' << bigDiff << ' ' << plane.FCount() << std::endl;
-        //     std::cout << plane.GetBestPoint(optimum) << '\n';
-        //     for (auto x : optimum) {
-        //         std::cout << x << ' ';
-        //     }
-        //     std::cout << '\n';
+        // if (i % 100 == 0) {
+        //     std::cout << "mean_divide = " << mean_divide << std::endl;
+        //     std::cout << "mean_get_best = " << mean_get_best << std::endl;
         // }
     }
-    std::cout << plane.searchFragments.size() << std::endl;
-    std::cout << plane.FCount() << std::endl;
+    std::cout << "mean_divide = " << mean_divide << std::endl;
+    std::cout << "mean_get_best = " << mean_get_best << std::endl;
+    std::cout << "searchFragments.size() = " << plane.searchFragments.size() << std::endl;
+    std::cout << "FCount = " << plane.FCount() << std::endl;
     return plane.GetBestPoint(optimum);
 }
 

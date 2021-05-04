@@ -47,6 +47,23 @@ double Test4Function(const std::array<double, N>& x) {
     return M_PI * f / 10. + 1.;
 }
 
+double Test5Function(const std::array<double, 3>& x) {
+    return (std::pow(x[0], 2) - 2. * std::pow(x[1], 2) + std::pow(x[2], 2)) * std::sin(x[0]) * std::sin(x[1]) * std::sin(x[2]);
+}
+
+template <std::size_t N>
+double Test6Function(const std::array<double, N>& x) {
+    double f = 0;
+    f += std::pow(std::sin(3 * M_PI * x[0]), 2);
+    for (size_t i = 1; i != N - 1; ++i) {
+        f += std::pow(x[i] - 1, 2) * (1 + std::pow(std::sin(3 * M_PI * x[i + 1]), 2));
+    }
+    f += std::pow(x[N-1] - 1, 2) * (1 + std::pow(std::sin(2 * M_PI * x[N-1]), 2));
+    f *= 0.1;
+    return f + 1;
+}
+
+
 Test<1> GetTest0() {
     double fMin = 0;
     std::array<double, 1> xMin{0};
@@ -91,18 +108,28 @@ Test<N> GetTest4() {
     return Test<N>("Test 4", fMin, xMin, leftBound, rightBound, Test4Function<N>, 0.01, 1.1, 10.);
 }
 
+Test<3> GetTest5() {
+    double fMin = -0.516374;
+    std::array<double, 3> xMin{1., 0.556002, -1.};
+    std::array<double, 3> leftBound;
+    std::array<double, 3> rightBound;
+    leftBound.fill(-1.);
+    rightBound.fill(1.);
+    return Test<3>("Test 5", fMin, xMin, leftBound, rightBound, Test5Function, 0.02, 1.2, 100.);
+}
 
+template <std::size_t N>
+Test<N> GetTest6() {
+    double fMin = 1.;
+    std::array<double, N> xMin;
+    std::array<double, N> leftBound;
+    std::array<double, N> rightBound;
+    xMin.fill(1.);
+    leftBound.fill(-5.);
+    rightBound.fill(5.);
+    return Test<N>("Test 6", fMin, xMin, leftBound, rightBound, Test6Function<N>, 0.01, 1.1, 10.);
+}
 
-    // {
-    //     double f = 0;
-    //     f += sin(3 * M_PI * x[0]) * sin(3 * M_PI * x[0]);
-    //     for (size_t i = 1; i != N - 1; ++i) {
-    //         f += (x[i] - 1) * (x[i] - 1) * (1 + sin(3 * M_PI * x[i + 1]) * sin(3 * M_PI * x[i + 1]));
-    //     }
-    //     f += (x[N-1] - 1) * (x[N-1] - 1) * (1 + sin(2 * M_PI * x[N-1]) * sin(2 * M_PI * x[N-1]));
-    //     f *= 0.1;
-    //     return f + 1; // [-5, 5]; min = 1
-    // }
 
 
 }

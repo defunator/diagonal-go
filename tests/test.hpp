@@ -22,7 +22,7 @@ protected:
 public:
     double eps = 0.02;
     double r = 1.2;
-    double C = 10;
+    double C = 10.;
 
     Test(const std::string& name_, double fMin_, const std::array<double, N>& xMin_,
         const std::array<double, N>& leftBound_, const std::array<double, N>& rightBound_,
