@@ -1,5 +1,6 @@
 #pragma once
 #include "plane.hpp"
+#include "tests.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,14 +23,8 @@ public:
     Optimizer();
 
     double optimize(
-        const std::array<double, N>& left,
-        const std::array<double, N>& right,
-        const std::function<double(const std::array<double, N>&)>& f,
-        std::array<double, N>& optimum,
-        double fOptim,
-        double eps = 0.005,
-        double r = 1.2,
-        double C = 100
+        const NTest::Test<N>& test,
+        std::array<double, N>& optimum
     );
 
     double getScore(double fSearch, double fOptim) {
@@ -46,15 +41,14 @@ NParallel::Optimizer<N>::Optimizer() { }
 
 template <std::size_t N>
 double NParallel::Optimizer<N>::optimize(
-    const std::array<double, N>& left,
-    const std::array<double, N>& right,
-    const std::function<double(const std::array<double, N>&)> &f,
-    std::array<double, N>& optimum,
-    double fOptim,
-    double eps,
-    double r,
-    double C) {
-    double fGlobalOptimum = f(left);
+    const NTest::Test<N>& test,
+    std::array<double, N>& optimum
+) {
+    std::array<double, N> left;
+    std::array<double, N> right;
+    test.GetBounds(left, right);
+
+    double fGlobalOptimum = test.GetFunction()(left);
     optimum = left;
     std::array<double, N> lleft = left;
     std::array<double, N> rright = right;
@@ -71,10 +65,10 @@ double NParallel::Optimizer<N>::optimize(
                     {
                         NSequential::Optimizer<N> op;
                         std::array<double, N> res;
-                        double fOptimum = op.optimize(lleft, rright, f, res, fOptim, eps, r, C);
+                        double fOptimum = op.optimize(test, res);
                     #pragma omp critical
-                        std::cout << lleft[0] << ' ' << rright[0] << std::endl;
-                        std::cout << fOptimum << std::endl;
+                        // std::cout << lleft[0] << ' ' << rright[0] << std::endl;
+                        // std::cout << fOptimum << std::endl;
                         if (fOptimum < fGlobalOptimum) {
                             fGlobalOptimum = fOptimum;
                             optimum = res;

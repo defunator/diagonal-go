@@ -1,0 +1,309 @@
+#pragma once
+#include "fragment.hpp"
+#include "point_tree.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <set>
+#include <string>
+#include <map>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <chrono>
+
+
+namespace NSequential {
+
+template<std::size_t N>
+class Plane {
+private:
+    PointTree<N> codeToPointId;
+    double r;
+    double C;
+    double lambdaMax;
+    std::size_t bestPoint;
+
+    void addFragmentPointCodes(std::size_t fragmentId, std::size_t left, std::size_t right);
+    std::pair<std::size_t, std::size_t> tryAddFragmentPoints(std::size_t fragmentId);
+
+public:
+    std::vector<NSequential::Fragment<N>> searchFragments; 
+
+    Plane(
+        const std::array<double, N>& left,
+        const std::array<double, N>& right,
+        const std::function<double(const std::array<double, N>&)>& f,
+        double r = 1.1,
+        double C = 100
+    );
+
+    void DivideFragment(std::size_t fragmentId);
+
+    double GetBestFragmentDiff();
+    double GetBestPoint(std::array<double, N>& optimum);
+
+    std::size_t GetBestFragmentId();
+
+    std::size_t FCount();
+
+    bool AssertFragment(std::size_t fragmentId) {
+        bool fail = false;
+        double eps = 1e-4;
+        searchFragments[fragmentId].TransformToPointCode();
+        std::array<double, N> x;
+        for (std::size_t i = 0; i != N; ++i) {
+            x[i] = codeToPointId.left[i];
+            double p = 1.;
+            for (auto c : searchFragments[fragmentId].code[i]) {
+                double w = (c - '0');
+                x[i] += (codeToPointId.right[i] - codeToPointId.left[i]) * w / p;
+                p *= 3.;
+            }
+        }
+        searchFragments[fragmentId].InvTransformToPointCode();
+        if (std::abs(codeToPointId.f(x) - codeToPointId.GetValue(searchFragments[fragmentId].leftPointId)) > eps) {
+            std::cout << "++++++++++++++++++++\n";
+            std::cout << "fragment code = ";
+            for (auto code : searchFragments[fragmentId].code) {
+                std::cout << "(" << code << ") ";
+            }
+            std::cout << '\n';
+            searchFragments[fragmentId].TransformToPointCode();
+            std::cout << "left point code = ";
+            for (auto code : searchFragments[fragmentId].code) {
+                std::cout << "(" << code << ") ";
+            }
+            std::cout << '\n';
+            std::cout << "f( ";
+            for (auto el : x) {
+                std::cout << el << ' ';
+            }
+            std::cout << ") = " << codeToPointId.f(x) << " != " << codeToPointId.GetValue(searchFragments[fragmentId].leftPointId) << std::endl;
+            std::cout << "++++++++++++++++++++\n";
+            searchFragments[fragmentId].InvTransformToPointCode();
+            fail = true;
+        }
+
+        searchFragments[fragmentId].TransformToPointCode(false);
+        for (std::size_t i = 0; i != N; ++i) {
+            x[i] = codeToPointId.left[i];
+            double p = 1.;
+            for (auto c : searchFragments[fragmentId].code[i]) {
+                double w = (c - '0');
+                x[i] += (codeToPointId.right[i] - codeToPointId.left[i]) * w / p;
+                p *= 3.;
+            }
+        }
+        searchFragments[fragmentId].InvTransformToPointCode(false);
+        if (std::abs(codeToPointId.f(x) - codeToPointId.GetValue(searchFragments[fragmentId].rightPointId)) > eps) {
+            std::cout << "++++++++++++++++++++\n";
+            std::cout << "fragment code = ";
+            for (auto code : searchFragments[fragmentId].code) {
+                std::cout << "(" << code << ") ";
+            }
+            std::cout << '\n';
+            searchFragments[fragmentId].TransformToPointCode(false);
+            std::cout << "right point code = ";
+            for (auto code : searchFragments[fragmentId].code) {
+                std::cout << "(" << code << ") ";
+            }
+            std::cout << '\n';
+            std::cout << "f( ";
+            for (auto el : x) {
+                std::cout << el << ' ';
+            }
+            std::cout << ") = " << codeToPointId.f(x) << " != " << codeToPointId.GetValue(searchFragments[fragmentId].rightPointId) << std::endl;
+            std::cout << "++++++++++++++++++++\n";
+            searchFragments[fragmentId].InvTransformToPointCode(false);
+            fail = true;
+        }
+        return fail;
+    }
+};
+
+} // end namespace NSequential
+
+
+template <std::size_t N>
+NSequential::Plane<N>::Plane(
+    const std::array<double, N>& left,
+    const std::array<double, N>& right,
+    const std::function<double(const std::array<double, N>&)>& f,
+    double r,
+    double C
+)
+    : codeToPointId(left, right, f)
+    , r(r)
+    , C(C)
+{
+    std::set<std::pair<double, std::size_t>> diff;
+    for (std::size_t i = 0; i != N; ++i) {
+        diff.insert({right[i] - left[i], i});
+        assert(right[i] - left[i] > 0);
+    }
+    std::array<std::string, N> code;
+    code.fill("0");
+    searchFragments.emplace_back(std::move(code), std::move(diff));
+    searchFragments.back().leftPointId = 1, searchFragments.back().rightPointId = 2;
+    lambdaMax = std::max(
+        std::abs(codeToPointId.GetValue(1) - codeToPointId.GetValue(2)) / searchFragments[0].diff,
+        std::numeric_limits<double>::epsilon()
+    );
+}
+
+
+template<std::size_t N>
+void NSequential::Plane<N>::addFragmentPointCodes(
+    std::size_t fragmentId,
+    std::size_t left,
+    std::size_t right
+) {
+    searchFragments[fragmentId].TransformToPointCode();
+    codeToPointId.AddPointCode(searchFragments[fragmentId].code, left);
+    searchFragments[fragmentId].InvTransformToPointCode();
+
+    searchFragments[fragmentId].TransformToPointCode(false);
+    codeToPointId.AddPointCode(searchFragments[fragmentId].code, right);
+    searchFragments[fragmentId].InvTransformToPointCode(false);
+}
+
+
+template <std::size_t N>
+std::pair<std::size_t, std::size_t> NSequential::Plane<N>::tryAddFragmentPoints(std::size_t fragmentId) {
+    // for (auto el : searchFragments[fragmentId].GetCode()) {
+    //     std::cout << el << std::endl;
+    // }
+    // std::cout << "tryAddFragmentPoints\n";
+    // for (auto el : searchFragments[fragmentId].code) {
+    //     std::cout << el << std::endl;
+    // }
+    // std::cout << std::endl;
+
+    // std::cout << "+++++++++++++TRY ADD+++++++++++++\n";
+    searchFragments[fragmentId].TransformToPointCode();
+    // for (auto el : searchFragments[fragmentId].code) {
+    //     std::cout << el << std::endl;
+    // }
+    // std::cout << std::endl;
+    std::size_t left = codeToPointId.GetPointByCode(searchFragments[fragmentId].code);
+    if (left == 0) {
+        left = codeToPointId.AddPoint(searchFragments[fragmentId].code);
+    }
+    // std::cout << left << std::endl;
+    searchFragments[fragmentId].InvTransformToPointCode();
+
+    searchFragments[fragmentId].TransformToPointCode(false);
+    // for (auto el : searchFragments[fragmentId].code) {
+    //     std::cout << el << std::endl;
+    // }
+    // std::cout << std::endl;
+    std::size_t right = codeToPointId.GetPointByCode(searchFragments[fragmentId].code);
+    if (right == 0) {
+        right = codeToPointId.AddPoint(searchFragments[fragmentId].code);
+    }
+    // std::cout << right << std::endl;
+    searchFragments[fragmentId].InvTransformToPointCode(false);
+    // std::cout << "+++++++++++++TRY ADD+++++++++++++\n";
+
+    return {left, right};
+}
+
+
+template<std::size_t N>
+void NSequential::Plane<N>::DivideFragment(std::size_t fragmentId) {
+    std::size_t leftBase = searchFragments[fragmentId].leftPointId;
+    std::size_t rightBase = searchFragments[fragmentId].rightPointId;
+
+    searchFragments.push_back(searchFragments[fragmentId]);
+    searchFragments.back().Divide('0');
+    searchFragments.push_back(searchFragments[fragmentId]);
+    searchFragments.back().Divide('2');
+    searchFragments[fragmentId].Divide('1');
+
+    auto[left, right] = tryAddFragmentPoints(fragmentId);
+    addFragmentPointCodes(fragmentId, left, right); // for '0' right and '2' left
+
+    std::vector<std::size_t> pointsToTest({left, right, rightBase, leftBase});
+    for (auto x1 : pointsToTest) {
+        for (auto x2 : pointsToTest) {
+            lambdaMax = std::max(
+                lambdaMax,
+                std::abs(codeToPointId.GetValue(x1) - codeToPointId.GetValue(x2)) / searchFragments.back().diff
+            );
+            // std::cout << "lambdaMax = " << lambdaMax << ' ' << x1 << ' ' << x2 << ' ' << codeToPointId.GetValue(x1) << ' ' << codeToPointId.GetValue(x2) << ' ' << searchFragments.back().diff << std::endl;
+        }
+    }
+    // std::cout << left << ' ' << right << std::endl;
+    // std::cout << left << ' ' << rightBase << std::endl;
+    // std::cout << leftBase << ' ' << right << std::endl;
+    searchFragments[fragmentId].leftPointId = left, searchFragments[fragmentId].rightPointId = right;
+    searchFragments[searchFragments.size() - 1].leftPointId = left, searchFragments[searchFragments.size() - 1].rightPointId = rightBase;
+    searchFragments[searchFragments.size() - 2].leftPointId = leftBase, searchFragments[searchFragments.size() - 2].rightPointId = right;
+
+    // std::vector<std::size_t> tt{fragmentId, searchFragments.size() - 1, searchFragments.size() - 2};
+    // for (std::size_t t : tt) {
+    //     std::cout << "fragmentId = " << t << '\n';
+    //     for (auto c : searchFragments[t].code) {
+    //         std::cout << "(" << c << ") ";
+    //     }
+    //     std::cout << "\nleft = " << searchFragments[t].leftPointId << " right = " << searchFragments[t].rightPointId << "\n\n";
+    // }
+}
+
+
+template<std::size_t N>
+double NSequential::Plane<N>::GetBestFragmentDiff() {
+    std::size_t bestI = 0;
+    for (std::size_t i = 0; i != searchFragments.size(); ++i) {
+        if (searchFragments[bestI].R < searchFragments[i].R) {
+            bestI = i;
+        }
+    }
+    return searchFragments[bestI].diff;
+}
+
+
+template<std::size_t N>
+double NSequential::Plane<N>::GetBestPoint(std::array<double, N>& optimum) {
+    return codeToPointId.GetBestPoint(optimum);
+}
+
+
+template<std::size_t N>
+std::size_t NSequential::Plane<N>::GetBestFragmentId() {
+    std::size_t k = std::max(searchFragments.size() / 2, 1ul);
+    double mu = (r + C / k) * lambdaMax;
+    // std::cout << '>' << lambdaMax << ' ' << (r + C / k) << std::endl;
+    std::size_t bestFragment = 0;
+    for (std::size_t i = 0; i != searchFragments.size(); ++i) {
+        // if (AssertFragment(i)) {
+        //     exit(0);
+        // }
+        double fLeft = codeToPointId.GetValue(searchFragments[i].leftPointId);
+        double fRight = codeToPointId.GetValue(searchFragments[i].rightPointId);
+        if (fLeft > fRight) {
+            std::swap(fLeft, fRight);
+        }
+        // std::cout << ' ' << fLeft << ' ' << fRight << std::endl;
+        searchFragments[i].UpdR(mu, fLeft, fRight);
+        if (searchFragments[bestFragment].R < searchFragments[i].R) {
+            bestFragment = i;
+        }
+    }
+    // std::cout << bestFragment << ' ' << searchFragments[bestFragment].R << std::endl;
+    return bestFragment;
+}
+
+
+template<std::size_t N>
+std::size_t NSequential::Plane<N>::FCount() {
+    return codeToPointId.FCount();
+}
+
