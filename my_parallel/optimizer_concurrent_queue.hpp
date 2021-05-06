@@ -64,9 +64,9 @@ double NParallel::Optimizer<N>::optimize(
     double eps,
     double r,
     double C) {
-    double enqueueRatio = 0.7;
+    double enqueueRatio = 0.9;
+    double precision = 0.01;
     double updateLambdaDiff = 0.001;
-    std::size_t maxFailInRow = 100;
 
     std::array<double, N> left;
     std::array<double, N> right;
@@ -78,45 +78,47 @@ double NParallel::Optimizer<N>::optimize(
     }
     bigDiff = std::sqrt(bigDiff);
     bigDiff *= eps;
-    std::atomic<std::size_t> failInRowCnt = 0;
+    // std::atomic<std::size_t> failInRowCnt = 0;
 
-    omp_set_num_threads(5);
+    omp_set_num_threads(1);
 #pragma omp parallel shared(plane)
     {
     #pragma omp single
         {
             while (42) {
-                if (plane.NFragments() > 100 && enqueueRatio * plane.NFragments() > plane.NQueued()) {
+                if (plane.NFragments() > 50 && enqueueRatio * plane.NFragments() > plane.NQueued()) {
                     continue;
                 }
                 if (plane.PrevUpdMuDiff() > updateLambdaDiff) {
+                    std::cout << plane.GetBestPoint(optimum) << '\n';
+                    std::cout << " = ";
+                    for (auto el : optimum) {
+                        std::cout << el << ' ';
+                    }
+                    std::cout << std::endl;
                 #pragma omp taskwait
                     plane.RecalcAllFragments();
-                    failInRowCnt = 0;
+                    // failInRowCnt = 0;
                 }
-                if (failInRowCnt > maxFailInRow) {
+                // if (failInRowCnt > 2.5 * (1 - enqueueRatio) * plane.NFragments()) {
+                // #pragma omp taskwait
+                //     break;
+                // }
+                if (test.GetAbsoluteValueDiff(plane.GetBestPoint()) < precision) {
                 #pragma omp taskwait
-                if (failInRowCnt != 0) {
                     break;
-                }
-                    if (plane.PrevUpdMuDiff() > updateLambdaDiff) {
-                        plane.RecalcAllFragments();
-                        failInRowCnt = 0;
-                    } else {
-                        break;
-                    }
                 }
                 #pragma omp task
                 {
                     typename NParallel::Plane<N>::NodePtr bestFragment;
                     if (plane.GetBestFragment(bestFragment)) {
-                        if (bestFragment->value->diff > bigDiff) {
-                            failInRowCnt = 0;
+                        // if (bestFragment->value->diff > bigDiff) {
+                            // failInRowCnt = 0;
                             plane.DivideFragment(bestFragment);
-                        } else {
-                            ++failInRowCnt;
-                            plane.PutFragmentBack(bestFragment);
-                        }
+                        // } else {
+                        //     ++failInRowCnt;
+                        //     plane.PutFragmentBack(bestFragment);
+                        // }
                     }
                 } // omp task
             }

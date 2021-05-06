@@ -64,6 +64,7 @@ public:
     void DivideFragment(NodePtr& fragment);
 
     double GetBestPoint(std::array<double, N>& optimum);
+    double GetBestPoint();
 
     bool GetBestFragment(NodePtr& to);
     void PutFragmentBack(NodePtr& fragment);
@@ -302,6 +303,10 @@ double NParallel::Plane<N>::GetBestPoint(std::array<double, N>& optimum) {
     return codeToPointId.GetBestPoint(optimum);
 }
 
+template <std::size_t N>
+double NParallel::Plane<N>::GetBestPoint() {
+    return codeToPointId.GetBestPoint();
+}
 
 template <std::size_t N>
 bool NParallel::Plane<N>::GetBestFragment(

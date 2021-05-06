@@ -207,6 +207,10 @@ public:
         return bestValue;
     }
 
+    double GetBestPoint() const {
+        return bestValue;
+    }
+
     // ~PointTree() {
     //     for (std::size_t i = 0; i != N; ++i) {
     //         oneDims[i]->dfs();

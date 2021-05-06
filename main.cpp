@@ -54,7 +54,10 @@ int main() {
     // benchmarkTest(NTest::GetTest3());
     // benchmarkTest(NTest::GetTest4<6>());
     // benchmarkTest(NTest::GetTest5());
-    benchmarkTest(NTest::GetTest6<5>());
+    // benchmarkTest(NTest::GetTest6<5>());
+    // benchmarkTest(NTest::GetTestChichinadze());
+    benchmarkTest(NTest::GetTestDolan());
+    
 
     return 0;
 }
