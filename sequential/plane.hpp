@@ -33,7 +33,6 @@ private:
     std::size_t bestPoint;
     std::size_t bestFragmentId;
 
-    // void addFragmentPointCodes(std::size_t fragmentId, std::size_t left, std::size_t right);
     void tryAddFragmentPoints(std::size_t fragmentId);
 
 public:
@@ -184,32 +183,9 @@ NSequential::Plane<N>::Plane(
     );
 }
 
-
-// template<std::size_t N>
-// void NSequential::Plane<N>::addFragmentPointCodes(
-//     std::size_t fragmentId,
-//     std::size_t left,
-//     std::size_t right
-// ) {
-//     searchFragments[fragmentId].TransformToPointCode();
-//     codeToPointId.AddPointCode(searchFragments[fragmentId].code, left);
-//     searchFragments[fragmentId].InvTransformToPointCode();
-
-//     searchFragments[fragmentId].TransformToPointCode(false);
-//     codeToPointId.AddPointCode(searchFragments[fragmentId].code, right);
-//     searchFragments[fragmentId].InvTransformToPointCode(false);
-// }
-
-
 template <std::size_t N>
 void NSequential::Plane<N>::tryAddFragmentPoints(std::size_t fragmentId) {
     std::size_t divDim = searchFragments[fragmentId].prevDivDim;
-    // searchFragments[fragmentId].DimTransformToPointCode(divDim);
-    // codeToPointId.GetTreeNodeByCode(
-    //     searchFragments[fragmentId].code[divDim],
-    //     searchFragments[fragmentId].leftPointTreeRefs[divDim],
-    //     divDim
-    // );
     std::size_t left = codeToPointId.GetPointIdFromArray(searchFragments[fragmentId].leftPointTreeRefs);
     if (left == 0) {
         left = codeToPointId.AddPoint(
@@ -217,25 +193,14 @@ void NSequential::Plane<N>::tryAddFragmentPoints(std::size_t fragmentId) {
         );
     }
     searchFragments[fragmentId].fLeft = codeToPointId.GetValue(left);
-    // searchFragments[fragmentId].DimInvTransformToPointCode(divDim);
 
-    // searchFragments[fragmentId].DimTransformToPointCode(divDim, false);
-    // codeToPointId.GetTreeNodeByCode(
-    //     searchFragments[fragmentId].code[divDim],
-    //     searchFragments[fragmentId].rightPointTreeRefs[divDim],
-    //     divDim
-    // );
-    // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     std::size_t right = codeToPointId.GetPointIdFromArray(searchFragments[fragmentId].rightPointTreeRefs);
-    // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    // std::cout << "TIME = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << std::endl;
     if (right == 0) {
         right = codeToPointId.AddPoint(
             searchFragments[fragmentId].rightPointTreeRefs
         );
     }
     searchFragments[fragmentId].fRight = codeToPointId.GetValue(right);
-    // searchFragments[fragmentId].DimInvTransformToPointCode(divDim, false);
 
     searchFragments[fragmentId].leftPointId = left;
     searchFragments[fragmentId].rightPointId = right;
@@ -246,11 +211,6 @@ void NSequential::Plane<N>::tryAddFragmentPoints(std::size_t fragmentId) {
     searchFragments[searchFragments.size() - 2].fRight = searchFragments[fragmentId].fRight;
     searchFragments[searchFragments.size() - 1].leftPointTreeRefs[divDim] = searchFragments[fragmentId].leftPointTreeRefs[divDim];
     searchFragments[searchFragments.size() - 2].rightPointTreeRefs[divDim] = searchFragments[fragmentId].rightPointTreeRefs[divDim];
-
-    codeToPointId.AddPointCode(searchFragments[fragmentId].leftPointTreeRefs, left);
-    codeToPointId.AddPointCode(searchFragments[fragmentId].rightPointTreeRefs, right);
-    codeToPointId.AddPointCode(searchFragments[searchFragments.size() - 1].leftPointTreeRefs, left);
-    codeToPointId.AddPointCode(searchFragments[searchFragments.size() - 2].rightPointTreeRefs, right);
 }
 
 
