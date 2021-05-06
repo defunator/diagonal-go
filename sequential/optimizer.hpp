@@ -79,14 +79,14 @@ double NSequential::Optimizer<N>::optimize(
     std::size_t bestFragmentId = plane.GetBestFragmentId();
     while (plane.GetBestFragmentDiff() > bigDiff) {
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        bestFragmentId = plane.GetBestFragmentId();
+        plane.DivideFragment(bestFragmentId);
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-        mean_get_best = 1. * (1. * i * mean_get_best + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
+        mean_divide = 1. * (1. * i * mean_divide + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
 
         begin = std::chrono::steady_clock::now();
-        plane.DivideFragment(bestFragmentId);
+        bestFragmentId = plane.GetBestFragmentId();
         end = std::chrono::steady_clock::now();
-        mean_divide = 1. * (1. * i * mean_divide + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
+        mean_get_best = 1. * (1. * i * mean_get_best + std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / (i + 1);
 
         ++i;
         // if (i % 100 == 0) {

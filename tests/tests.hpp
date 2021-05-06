@@ -63,6 +63,28 @@ double Test6Function(const std::array<double, N>& x) {
     return f + 1;
 }
 
+double TestChichinadzeFunction(const std::array<double, 2>& x) {
+    return x[0] * x[0] - 12. * x[0] + 11. + 10. * std::cos(0.5 * M_PI * x[0])
+            + 8 * std::sin(2.5 * M_PI * x[0]) - std::sqrt(0.2) * std::exp(-0.5 * std::pow(x[1] - 0.5, 2));
+}
+
+double TestColvilleFunction(const std::array<double, 4>& x) {
+    return 
+            + 100. * std::pow(x[0] * x[0] - x[1], 2)
+            + std::pow(x[2] - 1, 2)
+            + std::pow(x[0] - 1, 2)
+            + 90 * std::pow(x[2] * x[2] - x[3], 2)
+            + 10.1 * std::pow(x[1] - 1, 2)
+            + 10.1 * std::pow(x[3] - 1, 2)
+            + 19.8 * (x[3] - 1) * (x[1] - 1);
+}
+
+double TestDolanFunction(const std::array<double, 5>& x) {
+    return std::abs((x[0] + 1.7 * x[1]) * std::sin(x[0]) - 1.5 * x[2]
+                - 0.1 * x[3] * std::cos(x[3] + x[4] - x[0]) + 0.2 * x[4] * x[4]
+                - x[1] - 1);
+}
+
 
 Test<1> GetTest0() {
     double fMin = 0;
@@ -131,5 +153,38 @@ Test<N> GetTest6() {
 }
 
 
+Test<2> GetTestChichinadze() {
+    double fMin = -42.94438701899098;
+    std::array<double, 2> xMin{6.189866586965680, 0.5};
+    std::array<double, 2> leftBound;
+    std::array<double, 2> rightBound;
+    leftBound.fill(-30.);
+    rightBound.fill(30.);
+    assert(std::abs(TestChichinadzeFunction(xMin) - fMin) < 0.001);
+    return Test<2>("Chichinadze", fMin, xMin, leftBound, rightBound, TestChichinadzeFunction, 0.01, 1.3, 10.);
+}
+
+Test<4> GetTestColville() {
+    double fMin = 0;
+    std::array<double, 4> xMin;
+    std::array<double, 4> leftBound;
+    std::array<double, 4> rightBound;
+    xMin.fill(1.);
+    leftBound.fill(-2.);
+    rightBound.fill(2.);
+    assert(std::abs(TestColvilleFunction(xMin) - fMin) < 0.001);
+    return Test<4>("Colville", fMin, xMin, leftBound, rightBound, TestColvilleFunction, 0.01, 1.1, 10.);
+}
+
+Test<5> GetTestDolan() {
+    double fMin = 0;
+    std::array<double, 5> xMin{-74.10522498, 44.33511286, 6.21069214, 18.42772233, -16.5839403};
+    std::array<double, 5> leftBound;
+    std::array<double, 5> rightBound;
+    leftBound.fill(-100.);
+    rightBound.fill(100.);
+    assert(std::abs(TestDolanFunction(xMin) - fMin) < 0.001);
+    return Test<5>("Dolan", fMin, xMin, leftBound, rightBound, TestDolanFunction, 0.01, 1.2, 10.);
+}
 
 }

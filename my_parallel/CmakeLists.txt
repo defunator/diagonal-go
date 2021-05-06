@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(main)
+project(my_parallel)
 
 add_definitions(-std=c++17)
 set(CXX_FLAGS "-Wall")
@@ -21,22 +21,28 @@ endif()
 
 set(CMAKE_BUILD_TYPE Debug)
 
-# include_directories(sequential)
-# include_directories(parallel_naive)
-include_directories(my_parallel)
-include_directories(tests)
+set(
+  HEADERS
+  atomic_list.hpp
+  fragment.hpp
+  one_dim_point_tree.hpp
+  point_tree.hpp
+  plane.hpp
+  optimizer_concurrent_queue.hpp
+)
+set(
+  SOURCE
+  atomic_list.cpp
+  fragment.cpp
+  one_dim_point_tree.cpp
+  point_tree.cpp
+  plane.cpp
+  optimizer_concurrent_queue.cpp
+)
 
-add_executable(main main.cpp)
+add_library(my_parallel ${SOURCE} ${HEADERS})
 
-# add_subdirectory(sequential)
-# add_subdirectory(parallel_naive)
-add_subdirectory(my_parallel)
-add_subdirectory(tests)
-
-# target_link_libraries(main PUBLIC sequential)
-# target_link_libraries(main PUBLIC parallel_naive)
-target_link_libraries(main PUBLIC my_parallel)
-target_link_libraries(main PUBLIC tests)
-target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
-target_link_libraries(main PRIVATE TBB::tbb)
+target_include_directories(my_parallel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(my_parallel PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(my_parallel PRIVATE TBB::tbb)
 
