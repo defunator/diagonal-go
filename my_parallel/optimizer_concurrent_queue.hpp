@@ -64,7 +64,7 @@ double NParallel::Optimizer<N>::optimize(
     double eps,
     double r,
     double C) {
-    double enqueueRatio = 0.9;
+    // double enqueueRatio = 0.9;
     double precision = 0.01;
     double updateLambdaDiff = 0.001;
 
@@ -80,17 +80,23 @@ double NParallel::Optimizer<N>::optimize(
     bigDiff *= eps;
     // std::atomic<std::size_t> failInRowCnt = 0;
 
-    omp_set_num_threads(1);
+    std::size_t nThreads = 5;
+    // std::size_t prevUpdNFragments = 0;
+    omp_set_num_threads(nThreads);
+    
 #pragma omp parallel shared(plane)
     {
     #pragma omp single
         {
             while (42) {
-                if (plane.NFragments() > 50 && enqueueRatio * plane.NFragments() > plane.NQueued()) {
-                    continue;
-                }
-                if (plane.PrevUpdMuDiff() > updateLambdaDiff) {
-                    std::cout << plane.GetBestPoint(optimum) << '\n';
+                // if (plane.NFragments() > 50 && enqueueRatio * plane.NFragments() > plane.NQueued()) {
+                //     continue;
+                // }
+                while (plane.NFragments() - plane.NQueued() > nThreads * 5);
+                if (plane.PrevUpdMuDiff() > updateLambdaDiff/* || plane.NFragments() - prevUpdNFragments > 0.1 * prevUpdNFragments*/) {
+                    // enqueueRatio *= enqueueDecreaseRatio;
+                    // std::cout << enqueueRatio << '\n';
+                    std::cout << plane.GetBestPoint(optimum);
                     std::cout << " = ";
                     for (auto el : optimum) {
                         std::cout << el << ' ';
@@ -98,6 +104,7 @@ double NParallel::Optimizer<N>::optimize(
                     std::cout << std::endl;
                 #pragma omp taskwait
                     plane.RecalcAllFragments();
+                    // prevUpdNFragments = plane.NFragments();
                     // failInRowCnt = 0;
                 }
                 // if (failInRowCnt > 2.5 * (1 - enqueueRatio) * plane.NFragments()) {
@@ -114,7 +121,9 @@ double NParallel::Optimizer<N>::optimize(
                     if (plane.GetBestFragment(bestFragment)) {
                         // if (bestFragment->value->diff > bigDiff) {
                             // failInRowCnt = 0;
+                            // ++enqueued;
                             plane.DivideFragment(bestFragment);
+                            // --enqueued;
                         // } else {
                         //     ++failInRowCnt;
                         //     plane.PutFragmentBack(bestFragment);

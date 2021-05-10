@@ -43,7 +43,7 @@ void benchmarkTest(const NTest::Test<N>& test) {
         }
     }
     cout << ") = " << optimum << endl;
-    cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl;
+    cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl << endl;
 }
 
 int main() {
@@ -51,12 +51,13 @@ int main() {
     // benchmarkTest(NTest::GetTest0());
     // benchmarkTest(NTest::GetTest1());
     // benchmarkTest(NTest::GetTest2());
-    // benchmarkTest(NTest::GetTest3());
-    // benchmarkTest(NTest::GetTest4<6>());
+    // benchmarkTest(NTest::GetTestChichinadze());
+    // // // // benchmarkTest(NTest::GetTest4<6>());
     // benchmarkTest(NTest::GetTest5());
     // benchmarkTest(NTest::GetTest6<5>());
-    // benchmarkTest(NTest::GetTestChichinadze());
-    benchmarkTest(NTest::GetTestDolan());
+    benchmarkTest(NTest::GetTestHartman());
+    // benchmarkTest(NTest::GetTest3());
+    // benchmarkTest(NTest::GetTestDolan());
     
 
     return 0;

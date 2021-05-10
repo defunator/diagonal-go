@@ -68,21 +68,32 @@ double TestChichinadzeFunction(const std::array<double, 2>& x) {
             + 8 * std::sin(2.5 * M_PI * x[0]) - std::sqrt(0.2) * std::exp(-0.5 * std::pow(x[1] - 0.5, 2));
 }
 
-double TestColvilleFunction(const std::array<double, 4>& x) {
-    return 
-            + 100. * std::pow(x[0] * x[0] - x[1], 2)
-            + std::pow(x[2] - 1, 2)
-            + std::pow(x[0] - 1, 2)
-            + 90 * std::pow(x[2] * x[2] - x[3], 2)
-            + 10.1 * std::pow(x[1] - 1, 2)
-            + 10.1 * std::pow(x[3] - 1, 2)
-            + 19.8 * (x[3] - 1) * (x[1] - 1);
-}
-
 double TestDolanFunction(const std::array<double, 5>& x) {
     return std::abs((x[0] + 1.7 * x[1]) * std::sin(x[0]) - 1.5 * x[2]
                 - 0.1 * x[3] * std::cos(x[3] + x[4] - x[0]) + 0.2 * x[4] * x[4]
                 - x[1] - 1);
+}
+
+double TestHartmanFunction(const std::array<double, 6>& x) {
+    std::vector<std::vector<double>> a = { { 10, 3, 17, 3.5, 1.7, 8 } ,
+                                            { 0.05, 10, 17, 0.1, 8, 14 },
+                                            { 3, 3.5, 1.7, 10, 17, 8 }, 
+                                            { 17, 8, 0.05, 10, 0.1, 14 } };
+    std::vector<std::vector<double>> p = { { 0.1312, 0.1696, 0.5569, 0.0124, 0.8283, 0.5886 },
+                                            { 0.2329, 0.4135, 0.8307, 0.3736, 0.1004, 0.9991 },
+                                            { 0.2348, 0.1451, 0.3522, 0.2883, 0.3047, 0.6650 },
+                                            { 0.4047, 0.8828, 0.8732, 0.5743, 0.1091, 0.0381 } };
+    std::vector<double> c = { 1.0, 1.2, 3.0, 3.2 };
+
+    double y = 0.0;
+    for (int i = 0; i < 4; i++)
+    {
+        double e = 0.0;
+        for (int j = 0; j < 6; j++)
+            e += a[i][j] * std::pow(x[j] - p[i][j], 2.);
+        y += c[i] * std::exp(-e);
+    }
+    return -y;
 }
 
 
@@ -164,18 +175,6 @@ Test<2> GetTestChichinadze() {
     return Test<2>("Chichinadze", fMin, xMin, leftBound, rightBound, TestChichinadzeFunction, 0.01, 1.3, 10.);
 }
 
-Test<4> GetTestColville() {
-    double fMin = 0;
-    std::array<double, 4> xMin;
-    std::array<double, 4> leftBound;
-    std::array<double, 4> rightBound;
-    xMin.fill(1.);
-    leftBound.fill(-2.);
-    rightBound.fill(2.);
-    assert(std::abs(TestColvilleFunction(xMin) - fMin) < 0.001);
-    return Test<4>("Colville", fMin, xMin, leftBound, rightBound, TestColvilleFunction, 0.01, 1.1, 10.);
-}
-
 Test<5> GetTestDolan() {
     double fMin = 0;
     std::array<double, 5> xMin{-74.10522498, 44.33511286, 6.21069214, 18.42772233, -16.5839403};
@@ -184,7 +183,18 @@ Test<5> GetTestDolan() {
     leftBound.fill(-100.);
     rightBound.fill(100.);
     assert(std::abs(TestDolanFunction(xMin) - fMin) < 0.001);
-    return Test<5>("Dolan", fMin, xMin, leftBound, rightBound, TestDolanFunction, 0.01, 1.2, 10.);
+    return Test<5>("Dolan", fMin, xMin, leftBound, rightBound, TestDolanFunction, 0.01, 1.1, 10.);
+}
+
+Test<6> GetTestHartman() {
+    double fMin = -3.32236;
+    std::array<double, 6> xMin{0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.657301};
+    std::array<double, 6> leftBound;
+    std::array<double, 6> rightBound;
+    leftBound.fill(0.);
+    rightBound.fill(1.);
+    assert(std::abs(TestHartmanFunction(xMin) - fMin) < 0.001);
+    return Test<6>("Hartman", fMin, xMin, leftBound, rightBound, TestHartmanFunction, 0.01, 1.1, 10.);
 }
 
 }
