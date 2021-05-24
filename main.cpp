@@ -24,6 +24,10 @@ void benchmarkTest(const NTest::Test<N>& test) {
     double optimum = optimizer.optimize(test, xMin);
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
+    
+    cout << "\"name\": \"" << test.GetName() << "\", ";
+    cout << "\"time\": " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << ", \"algo\": \"      \"}," << endl;
+
     cout << test.GetName() << endl;
     cout << "OPTIMUM: f(";
     for (std::size_t i = 0; i != N; ++i) {
@@ -43,7 +47,6 @@ void benchmarkTest(const NTest::Test<N>& test) {
         }
     }
     cout << ") = " << optimum << endl;
-    cout << "TIME = " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << endl << endl;
 }
 
 int main() {
@@ -52,12 +55,19 @@ int main() {
     // benchmarkTest(NTest::GetTest1());
     // benchmarkTest(NTest::GetTest2());
     // benchmarkTest(NTest::GetTestChichinadze());
-    // // // // benchmarkTest(NTest::GetTest4<6>());
+    // benchmarkTest(NTest::GetTest4<4>());
     // benchmarkTest(NTest::GetTest5());
-    // benchmarkTest(NTest::GetTest6<5>());
-    benchmarkTest(NTest::GetTestHartman());
+    // benchmarkTest(NTest::GetTest6<4>());
+    // benchmarkTest(NTest::GetTestHartman());
     // benchmarkTest(NTest::GetTest3());
+    // benchmarkTest(NTest::GetTestColville());
     // benchmarkTest(NTest::GetTestDolan());
+    // benchmarkTest(NTest::GetTest10());
+    // benchmarkTest(NTest::GetTestHimmelBlau());
+    // benchmarkTest(NTest::GetTestDeb3<4>());
+    // benchmarkTest(NTest::GetTestTrid());
+    // benchmarkTest(NTest::GetTestLangerman5());
+    benchmarkTest(NTest::GetTestPaviani());
     
 
     return 0;

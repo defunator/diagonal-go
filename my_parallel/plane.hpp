@@ -38,7 +38,7 @@ private:
     std::atomic<double> lambdaMax;
     std::atomic<double> prevMu;
     // NodePtr bestFragment;
-    tbb::concurrent_priority_queue<std::pair<double, NodePtr>> fragmentQueue;
+    std::vector<tbb::concurrent_priority_queue<std::pair<double, NodePtr>>> fragmentQueues;
     AtomicList<Fragment<N>> searchFragments;
 
     /**
@@ -58,7 +58,8 @@ public:
         const std::array<double, N>& right,
         const std::function<double(const std::array<double, N>&)>& f,
         double r = 1.1,
-        double C = 100
+        double C = 100,
+        std::size_t nQueues = 1
     );
 
     void DivideFragment(NodePtr& fragment);
@@ -69,11 +70,12 @@ public:
     bool GetBestFragment(NodePtr& to);
     void PutFragmentBack(NodePtr& fragment);
     void RecalcAfterDivision(NodePtr& fragment);
-    // Warning: swaps `fragmentQueue` and iterates `searchFragments`, so it is not thread-safe
+    // Warning: swaps `fragmentQueues` and iterates `searchFragments`, so it is not thread-safe
     void RecalcAllFragments();
+    void RecalcAllFragments(double bigDiff);
 
     std::size_t FCount() const { return codeToPointId.FCount(); }
-    std::size_t NQueued() const { return fragmentQueue.size(); }
+    // std::size_t NQueued() const { return fragmentQueues.size(); }
     std::size_t NFragments() const { return searchFragments.Size(); }
 
     double PrevUpdMuDiff() const {
@@ -184,12 +186,14 @@ NParallel::Plane<N>::Plane(
     const std::array<double, N>& right,
     const std::function<double(const std::array<double, N>&)>& f,
     double r,
-    double C
+    double C,
+    std::size_t nQueues
 )
     : codeToPointId(left, right, f)
     , r(r)
     , C(C)
 {
+    fragmentQueues.resize(nQueues);
     std::array<std::string, N> code;
     code.fill("0");
     std::array<std::shared_ptr<OneDimPointTree>, N> leftPointTreeRefs;
@@ -313,11 +317,14 @@ bool NParallel::Plane<N>::GetBestFragment(
     NParallel::Plane<N>::NodePtr& to
 ) {
     std::pair<double, NParallel::Plane<N>::NodePtr> topVal;
-    bool resp = fragmentQueue.try_pop(topVal);
-    if (resp) {
-        to = topVal.second;
+    while (42) {
+        bool resp = fragmentQueues[std::rand() % fragmentQueues.size()].try_pop(topVal);
+        if (resp) {
+            to = topVal.second;
+            return resp;
+        }
     }
-    return resp;
+    // return resp;
 }
 
 
@@ -330,13 +337,13 @@ void NParallel::Plane<N>::PutFragmentBack(
     // double fLeft = fragment->value->fLeft;
     // double fRight = fragment->value->fRight;
     // fragment->value->UpdR(mu, fLeft, fRight);
-    fragmentQueue.push(std::make_pair(fragment->value->R, fragment));
+    fragmentQueues[std::rand() % fragmentQueues.size()].push(std::make_pair(fragment->value->R, fragment));
 }
 
 
 template <std::size_t N>
 void NParallel::Plane<N>::RecalcAfterDivision(NParallel::Plane<N>::NodePtr& fragment) {
-    tbb::concurrent_priority_queue<std::pair<double, NParallel::Plane<N>::NodePtr>> newFragmentQueue;
+    tbb::concurrent_priority_queue<std::pair<double, NParallel::Plane<N>::NodePtr>> newFragmentQueues;
     std::size_t k = std::max(searchFragments.Size() / 2, 1ul);
     double mu = (r + C / k) * lambdaMax;
 
@@ -345,7 +352,7 @@ void NParallel::Plane<N>::RecalcAfterDivision(NParallel::Plane<N>::NodePtr& frag
         double fLeft = fragment->value->fLeft;
         double fRight = fragment->value->fRight;
         fragment->value->UpdR(mu, fLeft, fRight);
-        fragmentQueue.push(std::make_pair(fragment->value->R, fragment));
+        fragmentQueues[std::rand() % fragmentQueues.size()].push(std::make_pair(fragment->value->R, fragment));
         fragment = fragment->next;
     }
 }
@@ -353,7 +360,7 @@ void NParallel::Plane<N>::RecalcAfterDivision(NParallel::Plane<N>::NodePtr& frag
 
 template <std::size_t N>
 void NParallel::Plane<N>::RecalcAllFragments() {
-    tbb::concurrent_priority_queue<std::pair<double, NParallel::Plane<N>::NodePtr>> newFragmentQueue;
+    std::vector<tbb::concurrent_priority_queue<std::pair<double, NParallel::Plane<N>::NodePtr>>> newFragmentQueues(fragmentQueues.size());
     std::size_t k = std::max(searchFragments.Size() / 2, 1ul);
     double mu = (r + C / k) * lambdaMax;
     prevMu = mu;
@@ -372,10 +379,40 @@ void NParallel::Plane<N>::RecalcAllFragments() {
         // if (bestFragment->value->R < cur->value->R) {
         //     bestFragment = cur;
         // }
-        newFragmentQueue.push(std::make_pair(cur->value->R, cur));
+        newFragmentQueues[std::rand() % fragmentQueues.size()].push(std::make_pair(cur->value->R, cur));
         cur = cur->next;
     }
-    fragmentQueue.swap(newFragmentQueue);
+    fragmentQueues.swap(newFragmentQueues);
+}
+
+template <std::size_t N>
+void NParallel::Plane<N>::RecalcAllFragments(double bigDiff) {
+    std::vector<tbb::concurrent_priority_queue<std::pair<double, NParallel::Plane<N>::NodePtr>>> newFragmentQueues(fragmentQueues.size());
+    std::size_t k = std::max(searchFragments.Size() / 2, 1ul);
+    double mu = (r + C / k) * lambdaMax;
+    prevMu = mu;
+
+    std::size_t searchFragmentsSize = searchFragments.Size();
+    NParallel::Plane<N>::NodePtr cur;
+    searchFragments.GetBegin(cur);
+    // bestFragment = cur;
+    while (searchFragmentsSize--) {
+        // if (AssertFragment(*cur->value)) {
+        //     exit(0);
+        // }
+        // if (bestFragment->value->R < cur->value->R) {
+        //     bestFragment = cur;
+        // }
+        // if (cur->value->diff > bigDiff) {
+            double fLeft = cur->value->fLeft;
+            double fRight = cur->value->fRight;
+            cur->value->UpdR(mu, fLeft, fRight);
+            
+            newFragmentQueues[std::rand() % fragmentQueues.size()].push(std::make_pair(cur->value->R, cur));
+        // }
+        cur = cur->next;
+    }
+    fragmentQueues.swap(newFragmentQueues);
 }
 
 
